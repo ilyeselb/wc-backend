@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-service
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.org/rewrites: "serviceName=wc-cluster-ip rewrite=/api;serviceName=pgadmin-ip rewrite=/"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: wc-cluster-ip
+                port:
+                  number: 3333
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pgadmin-ip
+                port:
+                  number: 80

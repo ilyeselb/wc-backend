@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wc-deployment
+  labels:
+    app: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: wc-backend
+          image: ilyeselayeb/wc-backend:latest
+          ports:
+            - containerPort: 3333
+          lifecycle:
+            postStart:
+              exec:
+                command: ["node", "ace", "migration:run","--force"]
+          env:
+            - name: PG_USER
+              value: postgres
+            - name: PG_HOST
+              value: postgres-cluster-ip-service
+            - name: PG_PORT
+              value: "5432"
+            - name: PG_DB_NAME
+              value: wcDB
+            - name: HOST
+              value: "0.0.0.0"
+            - name: APP_KEY
+              value: sd_yuezPCvp6w7WvaFmPuaXzev8K0UEb
+            - name: DRIVE_DISK
+              value: local
+            - name: DB_CONNECTION
+              value: pg
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-root-password
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wc-cluster-ip
+spec:
+  type: ClusterIP
+  ports:
+    - targetPort: 3333
+      port: 3333
+  selector:
+    app: api
